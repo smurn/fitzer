@@ -55,7 +55,7 @@ public class PropertyTest {
         new Property("", null, null);
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void ctrKeywordValueComment_emptyNullEmpty() {
         new Property("", null, "");
     }
@@ -259,7 +259,7 @@ public class PropertyTest {
     @Test(expected = IllegalStateException.class)
     public void getLongValue_BigInteger_Underflow() {
         Property target = new Property("",
-                BigInteger.valueOf(Long.MIN_VALUE).min(BigInteger.ONE));
+                BigInteger.valueOf(Long.MIN_VALUE).subtract(BigInteger.ONE));
         target.getLongValue();
     }
 
@@ -437,6 +437,63 @@ public class PropertyTest {
         Property target = new Property("", -4.5);
         assertEquals(-4.5f, target.getFloatValue(), 0.0f);
     }
+    
+    @Test
+    public void getFloatValue_Double_Max(){
+        BigInteger largest = new BigInteger(
+                "1" // one in front of the fraction
+                + "1111111111" + "1111111111" + "111" // 23 fractional bits
+                + "0" // the 'half' bit
+                + "1111111111" + "1111111111" + "1111111100" + "0000000000"
+                + "0000000000" + "0000000000" + "0000000000" + "0000000000"
+                + "0000000000" + "0000000000" + "000" // 28 ones, 75 zeros
+                , 2);
+
+        Property target = new Property("", largest.doubleValue());
+        assertEquals(Float.MAX_VALUE, target.getFloatValue(), 0.0f);
+    }
+    
+    @Test(expected=IllegalStateException.class)
+    public void getFloatValue_Double_Overflow(){
+        BigInteger largest = new BigInteger(
+                "1" // one in front of the fraction
+                + "1111111111" + "1111111111" + "111" // 23 fractional bits
+                + "1" // the 'half' bit
+                + "0000000000" + "0000000000" + "0000000000" + "0000000000"
+                + "0000000000" + "0000000000" + "0000000000" + "0000000000"
+                + "0000000000" + "0000000000" + "000" // 28 ones, 75 zeros
+                , 2);
+        Property target = new Property("", largest.doubleValue());
+        target.getFloatValue();
+    }
+    
+    @Test
+    public void getFloatValue_Double_Min(){
+        BigInteger largest = new BigInteger(
+                "-1" // one in front of the fraction
+                + "1111111111" + "1111111111" + "111" // 23 fractional bits
+                + "0" // the 'half' bit
+                + "1111111111" + "1111111111" + "1111111100" + "0000000000"
+                + "0000000000" + "0000000000" + "0000000000" + "0000000000"
+                + "0000000000" + "0000000000" + "000" // 28 ones, 75 zeros
+                , 2);
+        Property target = new Property("", largest.doubleValue());
+        assertEquals(-Float.MAX_VALUE, target.getFloatValue(), 0.0f);
+    }
+    
+    @Test(expected=IllegalStateException.class)
+    public void getFloatValue_Double_Underflow(){
+        BigInteger largest = new BigInteger(
+                "-1" // one in front of the fraction
+                + "1111111111" + "1111111111" + "111" // 23 fractional bits
+                + "1" // the 'half' bit
+                + "0000000000" + "0000000000" + "0000000000" + "0000000000"
+                + "0000000000" + "0000000000" + "0000000000" + "0000000000"
+                + "0000000000" + "0000000000" + "000" // 28 ones, 75 zeros
+                , 2);
+        Property target = new Property("", largest.doubleValue());
+        target.getFloatValue();
+    }
 
     @Test
     public void getFloatValue_Double_PosInf() {
@@ -586,7 +643,7 @@ public class PropertyTest {
                 + repeat("1", 970), 2);
 
         Property target = new Property("", biggestConvertible);
-        assertEquals(Float.MAX_VALUE, target.getDoubleValue(), 0.0f);
+        assertEquals(Double.MAX_VALUE, target.getDoubleValue(), 0.0f);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -597,7 +654,7 @@ public class PropertyTest {
                 + "1" // the 'half' bit
                 + repeat("0", 970), 2);
         Property target = new Property("", limit);
-        target.getFloatValue();
+        target.getDoubleValue();
     }
 
     @Test
@@ -619,7 +676,7 @@ public class PropertyTest {
                 + repeat("1", 970), 2);
 
         Property target = new Property("", smallest);
-        assertEquals(-Float.MAX_VALUE, target.getDoubleValue(), 0.0f);
+        assertEquals(-Double.MAX_VALUE, target.getDoubleValue(), 0.0f);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -631,7 +688,7 @@ public class PropertyTest {
                 + "1" // the 'half' bit
                 + repeat("0", 970), 2);
         Property target = new Property("", limit);
-        target.getFloatValue();
+        target.getDoubleValue();
     }
 
     @Test
@@ -643,19 +700,19 @@ public class PropertyTest {
     @Test
     public void getDoubleValue_Float_PosInf() {
         Property target = new Property("", Float.POSITIVE_INFINITY);
-        assertEquals(Float.POSITIVE_INFINITY, target.getDoubleValue(), 0.0f);
+        assertEquals(Double.POSITIVE_INFINITY, target.getDoubleValue(), 0.0f);
     }
 
     @Test
     public void getDoubleValue_Float_NegInf() {
         Property target = new Property("", Float.NEGATIVE_INFINITY);
-        assertEquals(Float.NEGATIVE_INFINITY, target.getDoubleValue(), 0.0f);
+        assertEquals(Double.NEGATIVE_INFINITY, target.getDoubleValue(), 0.0f);
     }
 
     @Test
     public void getDoubleValue_Float_NaN() {
         Property target = new Property("", Float.NaN);
-        assertEquals(Float.NaN, target.getDoubleValue(), 0.0f);
+        assertEquals(Double.NaN, target.getDoubleValue(), 0.0f);
     }
 
     @Test
@@ -667,19 +724,19 @@ public class PropertyTest {
     @Test
     public void getDoubleValue_Double_PosInf() {
         Property target = new Property("", Double.POSITIVE_INFINITY);
-        assertEquals(Float.POSITIVE_INFINITY, target.getDoubleValue(), 0.0f);
+        assertEquals(Double.POSITIVE_INFINITY, target.getDoubleValue(), 0.0f);
     }
 
     @Test
     public void getDoubleValue_Double_NegInf() {
         Property target = new Property("", Double.NEGATIVE_INFINITY);
-        assertEquals(Float.NEGATIVE_INFINITY, target.getDoubleValue(), 0.0f);
+        assertEquals(Double.NEGATIVE_INFINITY, target.getDoubleValue(), 0.0f);
     }
 
     @Test
     public void getDoubleValue_Double_NaN() {
         Property target = new Property("", Double.NaN);
-        assertEquals(Float.NaN, target.getDoubleValue(), 0.0f);
+        assertEquals(Double.NaN, target.getDoubleValue(), 0.0f);
     }
 
     @Test
@@ -695,7 +752,7 @@ public class PropertyTest {
         // add as many '1' behind the decimal as we like.
 
         Property target = new Property("", largest);
-        assertEquals(Float.MAX_VALUE, target.getDoubleValue(), 0.0f);
+        assertEquals(Double.MAX_VALUE, target.getDoubleValue(), 0.0f);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -707,7 +764,7 @@ public class PropertyTest {
                 + repeat("0", 970), 2));
 
         Property target = new Property("", limit);
-        target.getFloatValue();
+        target.getDoubleValue();
     }
 
     @Test
@@ -724,7 +781,7 @@ public class PropertyTest {
         // add as many '1' behind the decimal as we like.
 
         Property target = new Property("", smallest);
-        assertEquals(-Float.MAX_VALUE, target.getDoubleValue(), 0.0f);
+        assertEquals(-Double.MAX_VALUE, target.getDoubleValue(), 0.0f);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -737,7 +794,7 @@ public class PropertyTest {
                 + repeat("0", 970), 2));
 
         Property target = new Property("", limit);
-        target.getFloatValue();
+        target.getDoubleValue();
     }
 
     @Test(expected = IllegalStateException.class)

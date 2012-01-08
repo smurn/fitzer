@@ -15,6 +15,9 @@
  */
 package org.smurn.fitzer;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+
 /**
  * Represents a key-value pair of a FITS HDU header.
  * <p>The key is always represented as a single string. This class does
@@ -41,6 +44,14 @@ package org.smurn.fitzer;
  */
 public final class Property {
 
+    private final String keyword;
+
+    private final Object value;
+
+    private final String comment;
+
+    private final boolean commentary;
+
     /**
      * Creates an instance.
      * <p>The value of the created property is {@code null}, the comment is an
@@ -48,10 +59,16 @@ public final class Property {
      * @param keyword Keyword of the new property.
      * @throws NullPointerException if {@code keyword} is {@code null}.
      */
-    public Property(String keyword){
-        throw new UnsupportedOperationException();
+    public Property(String keyword) {
+        if (keyword == null) {
+            throw new NullPointerException("Keyword must not be null.");
+        }
+        this.keyword = keyword;
+        this.value = null;
+        this.comment = "";
+        this.commentary = false;
     }
-    
+
     /**
      * Creates an instance.
      * <p>The comment of the created property is an empty string and
@@ -60,10 +77,16 @@ public final class Property {
      * @param value Value of the new property. {@code null} is allowed.
      * @throws NullPointerException if {@code keyword} is {@code null}.
      */
-    public Property(String keyword, Object value){
-        throw new UnsupportedOperationException();
+    public Property(String keyword, Object value) {
+        if (keyword == null) {
+            throw new NullPointerException("Keyword must not be null.");
+        }
+        this.keyword = keyword;
+        this.value = value;
+        this.comment = "";
+        this.commentary = false;
     }
-    
+
     /**
      * Creates an instance.
      * <p> {@link #isCommentary()} of the created property is false.</p>
@@ -73,10 +96,19 @@ public final class Property {
      * @throws NullPointerException if {@code keyword} or {@code comment} is
      * {@code null}.
      */
-    public Property(String keyword, Object value, String comment){
-        throw new UnsupportedOperationException();
+    public Property(String keyword, Object value, String comment) {
+        if (keyword == null) {
+            throw new NullPointerException("Keyword must not be null.");
+        }
+        if (comment == null) {
+            throw new NullPointerException("Comment must not be null.");
+        }
+        this.keyword = keyword;
+        this.value = value;
+        this.comment = comment;
+        this.commentary = false;
     }
-     
+
     /**
      * Creates an instance.
      * <p>The value of the created property is {@code null}</p>
@@ -90,17 +122,30 @@ public final class Property {
      * @throws IllegalArgumentException if {@code commentary} is {@code true}
      * and {code value} is not {@code null}.
      */
-    public Property(String keyword, Object value, String comment, boolean commentary){
-        throw new UnsupportedOperationException();
+    public Property(String keyword, Object value, String comment,
+            boolean commentary) {
+        if (keyword == null) {
+            throw new NullPointerException("Keyword must not be null.");
+        }
+        if (comment == null) {
+            throw new NullPointerException("Comment must not be null.");
+        }
+        if (commentary && value != null) {
+            throw new IllegalArgumentException(
+                    "Commentary properties must have null as value.");
+        }
+        this.keyword = keyword;
+        this.value = value;
+        this.comment = comment;
+        this.commentary = commentary;
     }
-    
-    
+
     /**
      * Gets the keyword of this property.
      * @return Keyword, might empty but never {@code null}.
      */
     public String getKeyword() {
-        throw new UnsupportedOperationException();
+        return keyword;
     }
 
     /**
@@ -110,7 +155,7 @@ public final class Property {
      * @throws NullPointerException if {@code keyword} is {@code null}.
      */
     public Property withKeyword(String keyword) {
-        throw new UnsupportedOperationException();
+        return new Property(keyword, value, comment, commentary);
     }
 
     /**
@@ -118,37 +163,94 @@ public final class Property {
      * @return Value, might be {@code null}.
      */
     public Object getValue() {
-        throw new UnsupportedOperationException();
+        return value;
     }
 
     /**
      * Gets the value of this property as an {@code int}.
      * @return value as an {@code int}.
-     * @throws ClassCastException if the value is not of type {@code Byte},
-     * {@code Short}, {@code Integer}, {@code Long} or {@code BigInteger}. Or
-     * if the value is of one of the above types
+     * @throws IllegalStateException if the value is null or not of type 
+     * {@code Byte}, {@code Short}, {@code Integer}, {@code Long} or
+     * {@code BigInteger}. Or if the value is of one of the above types
      * but is either to large or to small for an integer. This differs from
      * the "Narrowing Primitive Conversions" in the java specification.
      * which silently discards the most-significant bits.
      */
     public int getIntValue() {
-        throw new UnsupportedOperationException();
+        if (value == null) {
+            throw new IllegalStateException(
+                    "Cannot convert null value to an int value.");
+        }
+        if (value instanceof Byte) {
+            return (Byte) value;
+        } else if (value instanceof Short) {
+            return (Short) value;
+        } else if (value instanceof Integer) {
+            return (Integer) value;
+        } else if (value instanceof Long) {
+            long number = (Long) value;
+            if (number < Integer.MIN_VALUE || number > Integer.MAX_VALUE) {
+                throw new IllegalStateException("Value is outside of the"
+                        + " range for an int value.");
+            }
+            return (int) number;
+        } else if (value instanceof BigInteger) {
+            BigInteger number = (BigInteger) value;
+            BigInteger min = BigInteger.valueOf(Integer.MIN_VALUE);
+            BigInteger max = BigInteger.valueOf(Integer.MAX_VALUE);
+            if (number.compareTo(min) < 0 || number.compareTo(max) > 0) {
+                throw new IllegalStateException("Value " + number
+                        + " is outside of the"
+                        + " range for an int value.");
+            }
+            return number.intValue();
+        } else {
+            throw new IllegalStateException(
+                    "Cannot convert type " + value.getClass().getSimpleName()
+                    + " to int.");
+        }
     }
 
     /**
      * Gets the value of this property as an {@code long}.
      * @return value as a {@code long}.
-     * @throws ClassCastException if the value is not of type {@code Byte},
-     * {@code Short}, {@code Integer}, {@code Long} or {@code BigInteger}. Or
-     * if the value is of one of the above types
+     * @throws IllegalStateException if the value is null or not of type 
+     * {@code Byte}, {@code Short}, {@code Integer}, {@code Long} or
+     * {@code BigInteger}. Or if the value is of one of the above types
      * but is either to large or to small for a long integer. This differs from
      * the "Narrowing Primitive Conversions" in the java specification.
      * which silently discards the most-significant bits.
      */
     public long getLongValue() {
-        throw new UnsupportedOperationException();
+        if (value == null) {
+            throw new IllegalStateException(
+                    "Cannot convert null value to a long value.");
+        }
+        if (value instanceof Byte) {
+            return (Byte) value;
+        } else if (value instanceof Short) {
+            return (Short) value;
+        } else if (value instanceof Integer) {
+            return (Integer) value;
+        } else if (value instanceof Long) {
+            return (Long) value;
+        } else if (value instanceof BigInteger) {
+            BigInteger number = (BigInteger) value;
+            BigInteger min = BigInteger.valueOf(Long.MIN_VALUE);
+            BigInteger max = BigInteger.valueOf(Long.MAX_VALUE);
+            if (number.compareTo(min) < 0 || number.compareTo(max) > 0) {
+                throw new IllegalStateException("Value " + number
+                        + " is outside of the"
+                        + " range for an long value.");
+            }
+            return number.longValue();
+        } else {
+            throw new IllegalStateException(
+                    "Cannot convert type " + value.getClass().getSimpleName()
+                    + " to long.");
+        }
     }
-    
+
     /**
      * Gets the value of this property as a {@code float}.
      * @return value as a {@code float}.
@@ -161,7 +263,55 @@ public final class Property {
      * possible. This will NOT cause an exception.
      */
     public float getFloatValue() {
-        throw new UnsupportedOperationException();
+        if (value == null) {
+            throw new IllegalStateException(
+                    "Cannot convert null value to a float value.");
+        }
+        if (value instanceof Byte) {
+            return (Byte) value;
+        } else if (value instanceof Short) {
+            return (Short) value;
+        } else if (value instanceof Integer) {
+            return (Integer) value;
+        } else if (value instanceof Long) {
+            return (Long) value;
+        } else if (value instanceof BigInteger) {
+            BigInteger number = (BigInteger) value;
+            float asFloat = number.floatValue();
+            if (Float.isInfinite(asFloat)) {
+                throw new IllegalStateException("Value " + number
+                        + " is outside of the"
+                        + " range for a float value.");
+            }
+            return asFloat;
+        } else if (value instanceof Float) {
+            return (Float) value;
+        } else if (value instanceof Double) {
+            double asDouble = (Double) value;
+            if (Double.isInfinite(asDouble) || Double.isNaN(asDouble)) {
+                return (float) asDouble;
+            }
+            float asFloat = (float) asDouble;
+            if (Float.isInfinite(asFloat)) {
+                throw new IllegalStateException("Value " + value
+                        + " is outside of the"
+                        + " range for a float value.");
+            }
+            return asFloat;
+        } else if (value instanceof BigDecimal) {
+            BigDecimal number = (BigDecimal) value;
+            float asFloat = number.floatValue();
+            if (Float.isInfinite(asFloat)) {
+                throw new IllegalStateException("Value " + number
+                        + " is outside of the"
+                        + " range for a float value.");
+            }
+            return asFloat;
+        } else {
+            throw new IllegalStateException(
+                    "Cannot convert type " + value.getClass().getSimpleName()
+                    + " to float.");
+        }
     }
 
     /**
@@ -176,7 +326,45 @@ public final class Property {
      * possible. This will NOT cause an exception.
      */
     public double getDoubleValue() {
-        throw new UnsupportedOperationException();
+        if (value == null) {
+            throw new IllegalStateException(
+                    "Cannot convert null value to a double value.");
+        }
+        if (value instanceof Byte) {
+            return (Byte) value;
+        } else if (value instanceof Short) {
+            return (Short) value;
+        } else if (value instanceof Integer) {
+            return (Integer) value;
+        } else if (value instanceof Long) {
+            return (Long) value;
+        } else if (value instanceof BigInteger) {
+            BigInteger number = (BigInteger) value;
+            double asDouble = number.doubleValue();
+            if (Double.isInfinite(asDouble)) {
+                throw new IllegalStateException("Value " + number
+                        + " is outside of the"
+                        + " range for a double value.");
+            }
+            return asDouble;
+        } else if (value instanceof Float) {
+            return (Float) value;
+        } else if (value instanceof Double) {
+            return (Double) value;
+        } else if (value instanceof BigDecimal) {
+            BigDecimal number = (BigDecimal) value;
+            double asDouble = number.doubleValue();
+            if (Double.isInfinite(asDouble)) {
+                throw new IllegalStateException("Value " + number
+                        + " is outside of the"
+                        + " range for a double value.");
+            }
+            return asDouble;
+        } else {
+            throw new IllegalStateException(
+                    "Cannot convert type " + value.getClass().getSimpleName()
+                    + " to double.");
+        }
     }
 
     /**
@@ -188,7 +376,15 @@ public final class Property {
      * @throws IllegalStateException if the value is not of type {@code String}.
      */
     public String getStringValue() {
-        throw new UnsupportedOperationException();
+        if (value == null) {
+            return null;
+        } else if (value instanceof String) {
+            return (String) value;
+        } else {
+            throw new IllegalStateException(
+                    "Cannot convert type " + value.getClass().getSimpleName()
+                    + " to String.");
+        }
     }
 
     /**
@@ -199,7 +395,7 @@ public final class Property {
      * {@link #isCommentary()} and {@code value} is not {@code null}.
      */
     public Property withValue(Object value) {
-        throw new UnsupportedOperationException();
+        return new Property(keyword, value, comment, commentary);
     }
 
     /**
@@ -211,7 +407,7 @@ public final class Property {
      * {@link #isCommentary()} and {@code value} is not {@code null}.
      */
     public Property withValue(int value) {
-        throw new UnsupportedOperationException();
+        return new Property(keyword, value, comment, commentary);
     }
 
     /**
@@ -223,7 +419,7 @@ public final class Property {
      * {@link #isCommentary()} and {@code value} is not {@code null}.
      */
     public Property withValue(long value) {
-        throw new UnsupportedOperationException();
+        return new Property(keyword, value, comment, commentary);
     }
 
     /** Creates a copy of this property with a different value.
@@ -234,7 +430,7 @@ public final class Property {
      * {@link #isCommentary()} and {@code value} is not {@code null}.
      */
     public Property withValue(double value) {
-        throw new UnsupportedOperationException();
+        return new Property(keyword, value, comment, commentary);
     }
 
     /** Creates a copy of this property with a different value.
@@ -245,7 +441,7 @@ public final class Property {
      * {@link #isCommentary()} and {@code value} is not {@code null}.
      */
     public Property withValue(float value) {
-        throw new UnsupportedOperationException();
+        return new Property(keyword, value, comment, commentary);
     }
 
     /** Creates a copy of this property with a different value.
@@ -258,7 +454,7 @@ public final class Property {
      * {@link #isCommentary()} and {@code value} is not {@code null}.
      */
     public Property withValue(String value) {
-        throw new UnsupportedOperationException();
+        return new Property(keyword, value, comment, commentary);
     }
 
     /**
@@ -266,7 +462,7 @@ public final class Property {
      * @return Comment, might empty but never {@code null}.
      */
     public String getComment() {
-        throw new UnsupportedOperationException();
+        return comment;
     }
 
     /**
@@ -276,7 +472,7 @@ public final class Property {
      * @throws NullPointerException if {@code comment} is {@code null}.
      */
     public Property withComment(String comment) {
-        throw new UnsupportedOperationException();
+        return new Property(keyword, value, comment, commentary);
     }
 
     /**
@@ -286,7 +482,7 @@ public final class Property {
      * otherwise.
      */
     public boolean isCommentary() {
-        throw new UnsupportedOperationException();
+        return commentary;
     }
 
     /**
@@ -298,6 +494,10 @@ public final class Property {
      * the value of this property is not {@code null}.
      */
     public Property withCommentary(boolean commentary) {
-        throw new UnsupportedOperationException();
+        if (commentary && value != null) {
+            throw new IllegalStateException(
+                    "Commentary properties must have null as value.");
+        }
+        return new Property(keyword, value, comment, commentary);
     }
 }
