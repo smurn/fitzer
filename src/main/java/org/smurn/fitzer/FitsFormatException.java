@@ -58,7 +58,11 @@ public class FitsFormatException extends IOException {
         this.offset = offset;
         this.messageKey = messageKey;
         this.messageParameters = messageParameters;
-        getLocalizedMessage(Locale.ROOT);
+        
+        ResourceBundle messages = ResourceBundle.getBundle(
+                "org.smurn.fitzer.messages", Locale.ROOT);
+        Formatter formatter = new Formatter(Locale.ROOT);
+        formatter.format(messages.getString(messageKey), messageParameters);
     }
 
     /**
