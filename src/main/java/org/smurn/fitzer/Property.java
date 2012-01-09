@@ -19,6 +19,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * Represents a key-value pair of a FITS HDU header.
@@ -526,5 +527,14 @@ public final class Property {
                 append(comment).
                 append(commentary).
                 toHashCode();
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this).append(keyword).
+                append(value).
+                append(comment).
+                append(commentary).
+                build();
     }
 }

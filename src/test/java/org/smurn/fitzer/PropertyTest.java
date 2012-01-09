@@ -916,6 +916,15 @@ public class PropertyTest {
     public void equalsContract() {
         EqualsVerifier.forClass(Property.class).verify();
     }
+    
+    @Test
+    public void toString_StringStringStringFalse(){
+        Property target = new Property("KEY", "VALUE", "COMMENT", false);
+        String str = target.toString();
+        assertTrue(str.contains("KEY"));
+        assertTrue(str.contains("VALUE"));
+        assertTrue(str.contains("COMMENT"));
+    }
 
     /**
      * Helper method that repeats a string a given times.
