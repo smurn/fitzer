@@ -17,6 +17,7 @@ package org.smurn.fitzer;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -437,9 +438,9 @@ public class PropertyTest {
         Property target = new Property("", -4.5);
         assertEquals(-4.5f, target.getFloatValue(), 0.0f);
     }
-    
+
     @Test
-    public void getFloatValue_Double_Max(){
+    public void getFloatValue_Double_Max() {
         BigInteger largest = new BigInteger(
                 "1" // one in front of the fraction
                 + "1111111111" + "1111111111" + "111" // 23 fractional bits
@@ -452,9 +453,9 @@ public class PropertyTest {
         Property target = new Property("", largest.doubleValue());
         assertEquals(Float.MAX_VALUE, target.getFloatValue(), 0.0f);
     }
-    
-    @Test(expected=IllegalStateException.class)
-    public void getFloatValue_Double_Overflow(){
+
+    @Test(expected = IllegalStateException.class)
+    public void getFloatValue_Double_Overflow() {
         BigInteger largest = new BigInteger(
                 "1" // one in front of the fraction
                 + "1111111111" + "1111111111" + "111" // 23 fractional bits
@@ -466,9 +467,9 @@ public class PropertyTest {
         Property target = new Property("", largest.doubleValue());
         target.getFloatValue();
     }
-    
+
     @Test
-    public void getFloatValue_Double_Min(){
+    public void getFloatValue_Double_Min() {
         BigInteger largest = new BigInteger(
                 "-1" // one in front of the fraction
                 + "1111111111" + "1111111111" + "111" // 23 fractional bits
@@ -480,9 +481,9 @@ public class PropertyTest {
         Property target = new Property("", largest.doubleValue());
         assertEquals(-Float.MAX_VALUE, target.getFloatValue(), 0.0f);
     }
-    
-    @Test(expected=IllegalStateException.class)
-    public void getFloatValue_Double_Underflow(){
+
+    @Test(expected = IllegalStateException.class)
+    public void getFloatValue_Double_Underflow() {
         BigInteger largest = new BigInteger(
                 "-1" // one in front of the fraction
                 + "1111111111" + "1111111111" + "111" // 23 fractional bits
@@ -909,6 +910,11 @@ public class PropertyTest {
     public void withCommentary_Fails() {
         Property target = new Property("", "", "", false);
         target.withCommentary(true);
+    }
+
+    @Test
+    public void equalsContract() {
+        EqualsVerifier.forClass(Property.class).verify();
     }
 
     /**

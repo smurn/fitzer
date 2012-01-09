@@ -17,6 +17,8 @@ package org.smurn.fitzer;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /**
  * Represents a key-value pair of a FITS HDU header.
@@ -45,11 +47,8 @@ import java.math.BigInteger;
 public final class Property {
 
     private final String keyword;
-
     private final Object value;
-
     private final String comment;
-
     private final boolean commentary;
 
     /**
@@ -499,5 +498,33 @@ public final class Property {
                     "Commentary properties must have null as value.");
         }
         return new Property(keyword, value, comment, commentary);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj == this) {
+            return true;
+        }
+        if (obj.getClass() != getClass()) {
+            return false;
+        }
+        Property rhs = (Property) obj;
+        return new EqualsBuilder().append(keyword, rhs.keyword).
+                append(value, rhs.value).
+                append(comment, rhs.comment).
+                append(commentary, rhs.commentary).
+                isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder().append(keyword).
+                append(value).
+                append(comment).
+                append(commentary).
+                toHashCode();
     }
 }
