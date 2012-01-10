@@ -21,6 +21,28 @@
                     <target>1.6</target>
                 </configuration>
             </plugin>
+            <!-- Copy messages.properties to messages_en.properties.
+                 See Issue #1. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.7</version>
+                <executions>
+                    <execution>
+                        <phase>process-resources</phase>
+                        <configuration>
+                            <target>
+                                  <copy 
+                                  file="${basedir}/src/main/resources/org/smurn/fitzer/messages.properties"
+                                  tofile="${project.build.outputDirectory}/org/smurn/fitzer/messages_en.properties"/>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
     <properties>
