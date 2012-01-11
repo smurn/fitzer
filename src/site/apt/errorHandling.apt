@@ -1,0 +1,119 @@
+~~ Copyright 2012 Stefan C. Mueller.
+~~
+~~ Licensed under the Apache License, Version 2.0 (the "License");
+~~ you may not use this file except in compliance with the License.
+~~ You may obtain a copy of the License at
+~~
+~~      http://www.apache.org/licenses/LICENSE-2.0
+~~
+~~ Unless required by applicable law or agreed to in writing, software
+~~ distributed under the License is distributed on an "AS IS" BASIS,
+~~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+~~ See the License for the specific language governing permissions and
+~~ limitations under the License.
+
+Error Handling
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  When reading and writing FITS files various irregularities can occur.
+This library tires to help the application to detect and handle those
+situations.
+
+* Invalid use of API
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  The public methods of this library perform checks to detect when it is
+used wrongly. This should support the application writers to detect bugs
+earlier. There is no guarantee that invalid use is detected. The developers
+are encouraged to read the documentation to be safe (especially the javadoc).
+
+  The javadoc of each method defines how the method must be used and the
+exceptions to expect if this is not the case. This library uses the same
+exceptions as the standard libraries such as <<<InvalidArgumentException>>>.
+
+  The messages of such exceptions are in English only.
+
+* Errors caused by the underlying IO system
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  This library uses classes from the <<<java.io>>> and <<<java.nio>>> package
+to read and write data from various sources. Those methods can
+throw <<<IOException>>>s. 
+
+  Such exceptions are not handled by this library. Instead they
+are thrown 'though' this library back to the application. 
+
+* FITS related errors
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  Errors occurring while reading and writing FITS files due to various
+reasons such as files not following the FITS specification are reported
+to an <<<ErrorHandler>>>.
+
+  The error handler distinguishes several levels of severity:
+
+  [<<<FATAL>>>] Unrecoverable errors. Fatal errors abort the current operation.
+
+    The state of the system afterwards depends on the error, but typically the
+    stream which caused the error is closed. <<<FATAL>>> errors are always
+    result in throwing an exception, even if the <<<ErrorHander>>> does not.
+  
+  [<<<ERROR>>>] Recoverable errors. 
+    Other than <<<FATAL>>> errors, <<<ERROR>>>s do not force to stop the
+    operation.
+
+    Such errors are reported to the application via the <<<ErrorHandler>>>.
+    The application may then decide to stop the processing by throwing an
+    exception (the default behavior and strongly suggested) or to let the
+    operation continue (possibly reporting the error in some application
+    specific way).
+  
+    Errors should NOT be ignored lightly. They are a good indicator that
+    the FITS file is corrupt. Even if the operation can
+    continue, the data produced might be wrong. Only choose not to abort the
+    operation if the results can be verified somehow.
+
+  [<<<WARNING>>>] Warning messages.
+    Technically they are handled the same way as <<<ERROR>>>s with the
+    exception that they are ignored by default. The application can still
+    choose to abort the operation by throwing an exception from the
+    <<<ErrorHandler>>>.
+
+    Warnings are produced for irregularities that are very unlikely to
+    cause problems. The warning might still be interesting to the user.
+
+  []
+
+  If no <<<ErrorHandler>>> is explicitly defined, <<<FATAL>>> and <<<ERROR>>>
+are thrown back to the application. <<<WARNING>>>s are ignored.
+  
+* Read Errors
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  This library tires to be liberal when reading FITS files that do not
+follow the specification to the bit. However when there is a risk of
+miss-interpreting the file, resulting in wrong data being delivered to the
+application, at least an <<<ERROR>>> is produced. If this is clearly not
+a risk, a <<<WARNING>>> is generated. Note that there is no guarantee
+that errors will be detected.
+
+  Protecting the user against working with invalid data has priority over
+being able to read corrupted / incompatible files. The application can
+adjust this by deciding not to throw an exception for <<<ERROR>>>s, making
+the library more liberal towards invalid files, or it can throw exceptions
+for <<<WARNING>>>s too, allowing only to read files that follow the
+specification completely (at least to the point where this library checks for
+it).
+  
+* Write Errors
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  While writing a FITS file, the data provided by the application is checked
+to correspond with the FITS specification and conventions in use.
+
+  This library is less liberal when writing than when reading. Following
+the specification closely is important to guarantee the compatibility and
+longevity of the files.
+
+  Every attempt to write a FITS file that violates the specification /
+convention produces an <<<ERROR>>> or aborts with a <<<FATAL>>> error. Only
+divergences from recommendations are reported as <<<WARNING>>>s.
+
+* Internationalization
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  Errors reported to the <<<ErrorHandler>>> are available in several
+languages. This should support developing internationalized applications.
