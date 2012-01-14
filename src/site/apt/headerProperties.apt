@@ -1,0 +1,214 @@
+~~ Copyright 2012 Stefan C. Mueller.
+~~
+~~ Licensed under the Apache License, Version 2.0 (the "License");
+~~ you may not use this file except in compliance with the License.
+~~ You may obtain a copy of the License at
+~~
+~~      http://www.apache.org/licenses/LICENSE-2.0
+~~
+~~ Unless required by applicable law or agreed to in writing, software
+~~ distributed under the License is distributed on an "AS IS" BASIS,
+~~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+~~ See the License for the specific language governing permissions and
+~~ limitations under the License.
+
+Header Properties
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  A FITS header consists of a list of keyword-value pairs called properties
+in this library.
+
+* Type of Values
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  The specification describes six different types of values:
+
+  [string] Sequence of characters of arbitrary length
+ 
+  [integer] Integer number of arbitrary length
+
+  [floating point number] Decimal number in base 10 of arbitrary length with
+   support for scientific notation.
+
+  [complex integer] Complex number consisting of two integers of arbitrary
+   length.
+
+  [complex floating point number] Complex number consisting of two decimal
+   numbers in base 10 with support for scientific notation.
+
+  [null] Type of the special value <<<null>>>.
+
+  []
+
+  During parsing the type of a value cannot always be uniquely identified since
+a floating point number might be indistinguishable from an integer (in both
+the real and complex case).
+
+  Additional types are be implemented on top of those types, typically by
+encoding them into a string. See for example the <<<DATE>>> keyword.
+
+  It seems to make sense to implement this in a two phase process. First
+parse the values into one of the above types, then, if necessary, decode
+it into the actual type. This leaves two questions open:
+
+  * How to select the type for parsing?
+
+  * How to select the type for decoding?
+
+  []
+
+
+** Choice of the parsing type
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The question boils down to the discrimination of integers and 
+floating point numbers since the other cases can be distinguished.
+
+  * Treat all integers as floating point numbers. That is, "1234" would be
+    treated as a floating point number.
+
+  * Treat values that are in proper integer format as integers even
+    if they are also in proper floating point format. That is, "1234" would
+    be interpreted as an integer, but "1234.000" as a floating point number.
+
+  * Treat values that are integers as integers. This is different from
+    the above one as "1234.000" would result in the integer type even 
+    though the number is not stored in integer format.
+
+  []
+
+  The specification makes no statement that floating point numbers containing
+integer numbers should be encoded in a way that clearly marks them as a
+floating point number (for example by ensuring that they contain a '.' 
+character). In variant 2 from above the library's behavior would depend on
+the encoding which can be arbitrarily selected by FITS writers. This could
+potentially lead to applications behaving differently based on a encoding
+detail.
+
+  The first variant does not suffer from this problem as all numbers are
+treated equally as floating point numbers. Great care must be taken that
+no precision is lost before it becomes clear how the number is going to be
+used. For example storing the value temporarily in a <<<double>>> to have
+it later delivered to the application as a <<<long>>> is unacceptable
+since we might loose the least significant bits on the way. While this
+is typically acceptable when dealing with floating point numbers, in this
+example this is not the case since the application is reading an integer from a
+header property storing an integer.
+
+  The third variant would also work, however it seems less elegant than the
+first variant.
+
+** Choice of the decoding type
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  In order to support application specific types the application must
+have the option to choose the type it needs. The library then needs to 
+check based on the parsing type and the value if the request can be served.
+
+  However, the application might not always know the type either. The obvious
+choice is to use the parsing type in those circumstances. However there might
+be additional information available to the library to guide this
+decision. For example all properties with a keyword starting with <<<DATE>>>
+are required by the specification to contain a date/time encoded as a string.
+The question is if we should use this information or if that would violate
+the principle of least surprise.
+
+  When writing the application provides the value and therefore also the type.
+We can either ignore this type and convert it to one of the parsing types
+immediately or we can keep it as the decoding type. Converting means that
+the behavior of the property becomes dependent on the configured converters
+which are part of the 'context'. There will typically only be a single such
+context for an application. So is this bad?
+
+  Yes. If we pass the context explicitly around the API gets ugly. If
+we pass it implicitly (thread local or static) we get side effects which
+violate the principle of least surprise.
+
+  What's the alternative? If the application stores a date inside a property
+and later tries to get it as a string we can either not allow this which
+would mean that we behave differently than when the property was read from
+a file, or we can convert it which leads us to the same problem as before.
+
+  We say that the property only supports the parsing types (without integers).
+Support for additional types is 'external' to the property but property can
+support helper methods. Those either explicitly take a converter as a
+parameter or implicitly use the context.
+
+** The mess with <<<null>>> <<<undef>>> and empty strings.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The FITS specification says:
+
+  * Undefined value:
+----------
+KEYWORD = 
+----------
+
+  * <<<null>>> value:
+----------
+KEYWORD = ''
+----------
+
+  * Empty string value:
+----------
+KEYWORD = '  '
+----------
+
+  []
+
+  Just to get this straight, according to the specification a string
+consisting only of spaces, is an empty string. But only if it contains
+at least one space. A string without any characters is NOT an empty string (sic!)
+but <<<null>>>. If no value is given for a keyword than the value is
+undefined.
+
+  You're allowed to bang your head against the desk at this point...
+
+  Leading spaces in a string are significant, trailing spaces are not. A string
+that consists only of spaces reduces to a string consisting of a single space
+(which is an empty string).
+Apparently with only-space strings the first space is considered a leading space
+while the others are trailing spaces. And as an exclusive exception, the value
+of the <<<XTENSTION>>> keyword needs to be padded by spaces, trailing spaces. 
+Which apparently do matter in this case.
+
+  Take care not to hurt your self to badly...
+
+  Unless someone can give me a reasonable explanation for this beyond historical
+reasons, I will refuse to implement this.
+
+  This is what I'll do:
+
+  * Keywords without a value are given the <<<null>>> value.
+
+  * Strings are taken as-is. Including all spaces wherever they are.
+
+  []
+
+  That way there is odd discrimination between an undefined-value and <<<null>>>
+and an empty string is just an empty string.
+Indeed all strings are exactly what you expect them to be.
+
+  The <<<null>>> value is no longer a string. This way <<<null>>> is
+repesenting the case where there is no value and therefore also no type,
+which matches the usual semantic of <<<null>>>.
+
+  In order to be compatible with the specification we simply delegate the
+matter to the application: In the documentation we write:
+  
+  The application has to
+
+  * interprete <<<null>>> as an undefined value.
+
+  * interprete empty strings as <<<null>>>.
+
+  * Ignore trailing spaces but not leading spaces. If the string consists
+only of spaces the string is to be interpreted as a single space, which
+is to be interpreted as an empty string (that has a length > 0).
+
+  * Make sure that <<<XTENSTION>>> is padded properly.
+
+  []
+
+  Since most users don't read the documentation and the others will see the a 
+big warning, no application will actually follow those rules. That way
+the application's developers might just keep their sanity.
+
