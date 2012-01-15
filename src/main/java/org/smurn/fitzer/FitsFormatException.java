@@ -20,6 +20,8 @@ import java.util.Formatter;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /**
  * Signals that the data read is not in the valid FITS format.
@@ -104,5 +106,31 @@ public class FitsFormatException extends IOException {
     @Override
     public String getLocalizedMessage() {
         return getLocalizedMessage(Locale.getDefault());
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj == this) {
+            return true;
+        }
+        if (obj.getClass() != getClass()) {
+            return false;
+        }
+        FitsFormatException rhs = (FitsFormatException) obj;
+        return new EqualsBuilder().append(offset, rhs.offset).
+                append(messageKey, rhs.messageKey).
+                append(messageParameters, rhs.messageParameters).
+                isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder().append(offset).
+                append(messageKey).
+                append(messageParameters).
+                toHashCode();
     }
 }
