@@ -18,47 +18,43 @@ package org.smurn.fitzer;
 import java.io.IOException;
 
 /**
- * An error handler provides call-backs used by this library to inform
- * the application of irregular events.
+ * An error handler provides call-backs used by this library to inform the
+ * application of irregular events.
  */
 public interface ErrorHandler {
-    
+
     /**
-     * Called if an unrecoverable error occurred.
-     * <p>If the application throws an exception in this method
-     * that exception will be thrown down the call-stack back to the
-     * application. If no exception is thrown in this method then
-     * the one provided to this method is thrown automatically afterwards.
-     * Since the error is unrecoverable there is no way to avoid that
-     * an exception will be thrown.</p>
+     * Called if an unrecoverable error occurred. <p>If the application throws
+     * an exception in this method that exception will be thrown down the
+     * call-stack back to the application. If no exception is thrown in this
+     * method then the one provided to this method is thrown automatically
+     * afterwards. Since the error is unrecoverable there is no way to avoid
+     * that an exception will be thrown.</p>
      * @param exception Exception describing the error.
      * @throws IOException exception of the applications choice.
      * @throws NullPointerException if {@code exception} is {@code null}.
      */
     void fatal(FitsFormatException exception) throws IOException;
-    
+
     /**
-     * Called if a recoverable error occurred.
-     * <p>If the application throws an exception in this method
-     * that exception will be thrown down the call-stack back to the
-     * application. If no exception is thrown in this method then
-     * the library will finish the operation.</p>
+     * Called if a recoverable error occurred. <p>If the application throws an
+     * exception in this method that exception will be thrown down the
+     * call-stack back to the application. If no exception is thrown in this
+     * method then the library will finish the operation.</p>
      * @param exception Exception describing the error.
      * @throws IOException exception of the applications choice.
      * @throws NullPointerException if {@code exception} is {@code null}.
      */
     void error(FitsFormatException exception);
-    
+
     /**
-     * Called if a non-critical irregularity occurred.
-     * <p>If the application throws an exception in this method
-     * that exception will be thrown down the call-stack back to the
-     * application. If no exception is thrown in this method then
-     * the library will finish the operation.</p>
+     * Called if a non-critical irregularity occurred. <p>If the application
+     * throws an exception in this method that exception will be thrown down the
+     * call-stack back to the application. If no exception is thrown in this
+     * method then the library will finish the operation.</p>
      * @param exception Exception describing the warning.
      * @throws IOException exception of the applications choice.
      * @throws NullPointerException if {@code exception} is {@code null}.
      */
     void warning(FitsFormatException exception);
-    
 }

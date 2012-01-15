@@ -916,9 +916,9 @@ public class PropertyTest {
     public void equalsContract() {
         EqualsVerifier.forClass(Property.class).verify();
     }
-    
+
     @Test
-    public void toString_StringStringStringFalse(){
+    public void toString_StringStringStringFalse() {
         Property target = new Property("KEY", "VALUE", "COMMENT", false);
         String str = target.toString();
         assertTrue(str.contains("KEY"));

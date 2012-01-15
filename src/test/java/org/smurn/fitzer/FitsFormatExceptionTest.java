@@ -25,34 +25,34 @@ import static org.junit.Assert.*;
  * Unit tests for {@link FitsFormatException}.
  */
 public class FitsFormatExceptionTest {
-    
+
     @Test(expected = IllegalArgumentException.class)
     public void ctr_NegativeOffset() {
         new FitsFormatException(-1, "FitsFormatExceptionTest", 0, 0);
     }
-    
+
     @Test(expected = NullPointerException.class)
     public void ctr_NullKey() {
         new FitsFormatException(0, null, 0, 0);
     }
-    
+
     @Test(expected = MissingResourceException.class)
     public void ctr_NonExistentKey() {
         new FitsFormatException(0, "does_not_exist", 0, 0);
     }
-    
+
     @Test(expected = IllegalFormatException.class)
     public void ctr_MissingParameter() {
         new FitsFormatException(0, "FitsFormatExceptionTest", 0);
     }
-    
+
     @Test
     public void getOffset() {
         FitsFormatException target = new FitsFormatException(100,
                 "FitsFormatExceptionTest", 0, 0);
         assertEquals(100, target.getOffset());
     }
-    
+
     @Test
     public void getMessage() {
         FitsFormatException target = new FitsFormatException(100,
@@ -61,7 +61,7 @@ public class FitsFormatExceptionTest {
         String expected = "Near byte 100: Message with two parameters 1 2.";
         assertEquals(expected, actual);
     }
-    
+
     @Test
     public void getLocalizedMessage() {
         FitsFormatException target = new FitsFormatException(100,
@@ -71,7 +71,7 @@ public class FitsFormatExceptionTest {
         String expected = "Nahe Byte 100: Nachricht mit zwei Parametern 1 2.";
         assertEquals(expected, actual);
     }
-    
+
     @Test
     public void getLocalizedMessage_GERMAN() {
         FitsFormatException target = new FitsFormatException(100,

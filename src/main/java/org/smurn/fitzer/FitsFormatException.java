@@ -34,11 +34,10 @@ public class FitsFormatException extends IOException {
 
     /**
      * Creates an instance.
-     * @param offset    Position in the data stream giving an indication
-     * where in the file the error was detected. The first byte in the file
-     * has offset 0.
+     * @param offset Position in the data stream giving an indication where in
+     * the file the error was detected. The first byte in the file has offset 0.
      * @param messageKey Key of the error message within the {@code messages}
-     * resource bundle. The stored string will be formatted with 
+     * resource bundle. The stored string will be formatted with
      * {@link Formatter} to produce the final message.
      * @param messageParameters Parameters to of the error message. Passed to
      * {@link Formatter}.
@@ -60,7 +59,7 @@ public class FitsFormatException extends IOException {
         this.offset = offset;
         this.messageKey = messageKey;
         this.messageParameters = messageParameters;
-        
+
         ResourceBundle messages = ResourceBundle.getBundle(
                 "org.smurn.fitzer.messages", Locale.ROOT);
         Formatter formatter = new Formatter(Locale.ROOT);
@@ -68,8 +67,8 @@ public class FitsFormatException extends IOException {
     }
 
     /**
-     * Gets the position in the data stream giving an indication where in
-     * the file the error wad detected. 
+     * Gets the position in the data stream giving an indication where in the
+     * file the error wad detected.
      * @return Position in the data stream. The first byte has position 0.
      */
     public long getOffset() {
@@ -107,7 +106,7 @@ public class FitsFormatException extends IOException {
     public String getLocalizedMessage() {
         return getLocalizedMessage(Locale.getDefault());
     }
-    
+
     @Override
     public boolean equals(Object obj) {
         if (obj == null) {
