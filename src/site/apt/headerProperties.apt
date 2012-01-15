@@ -188,7 +188,7 @@ and an empty string is just an empty string.
 Indeed all strings are exactly what you expect them to be.
 
   The <<<null>>> value is no longer a string. This way <<<null>>> is
-repesenting the case where there is no value and therefore also no type,
+representing the case where there is no value and therefore also no type,
 which matches the usual semantic of <<<null>>>.
 
   In order to be compatible with the specification we simply delegate the
