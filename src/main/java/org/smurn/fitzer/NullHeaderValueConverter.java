@@ -20,7 +20,7 @@ import java.io.IOException;
 /**
  * Header value converter for {@code null} values.
  */
-public final class NullHeaderValueConverter implements HeaderValueConverter {
+final class NullHeaderValueConverter implements HeaderValueConverter {
 
     @Override
     public boolean compatibleTypeCheck(Object value) {
