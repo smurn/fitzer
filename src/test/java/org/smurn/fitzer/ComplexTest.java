@@ -16,6 +16,7 @@
 package org.smurn.fitzer;
 
 import java.math.BigDecimal;
+import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -49,5 +50,10 @@ public class ComplexTest {
     public void getImag() {
         Complex target = new Complex(BigDecimal.ONE, BigDecimal.TEN);
         assertEquals(BigDecimal.TEN, target.getImag());
+    }
+    
+    @Test
+    public void equalsContract() {
+        EqualsVerifier.forClass(Complex.class).verify();
     }
 }

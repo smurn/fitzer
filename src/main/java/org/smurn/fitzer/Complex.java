@@ -16,11 +16,13 @@
 package org.smurn.fitzer;
 
 import java.math.BigDecimal;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /**
  * Represents a complex number.
  */
-public class Complex {
+public final class Complex {
 
     private final BigDecimal real;
     private final BigDecimal imag;
@@ -57,5 +59,34 @@ public class Complex {
      */
     public BigDecimal getReal() {
         return real;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj == this) {
+            return true;
+        }
+        if (obj.getClass() != getClass()) {
+            return false;
+        }
+        Complex rhs = (Complex) obj;
+        return new EqualsBuilder().append(real, rhs.real).
+                append(imag, rhs.imag).
+                isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder().append(real).
+                append(imag).
+                toHashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "(" + real + ", " + imag + ")";
     }
 }
