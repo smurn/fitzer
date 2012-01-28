@@ -179,6 +179,7 @@ interface HeaderValueConverter {
      * otherwise the encoding should be such that the resulting array is as
      * small (no unnecessary padding).
      * @return Array containing the encoded value. No more than 70 bytes.
+     * @throws NullPointerException if {@code errorHandler} is {@code null}.
      * @throws IllegalArgumentException if {@code value} does not compatible
      * (see {@link #compatibleTypeCheck()}) or if {@code fixedFormat} is
      * {@code true} but the converter does not support the fixed format.

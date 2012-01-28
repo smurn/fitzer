@@ -85,6 +85,9 @@ final class NullHeaderValueConverter implements HeaderValueConverter {
             throw new IllegalArgumentException(
                     "Can only encode the null value.");
         }
+        if (errorHandler == null) {
+            throw new NullPointerException("errorHandler must not be null.");
+        }
         return new byte[0];
     }
 }
