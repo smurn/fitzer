@@ -29,7 +29,7 @@ interface HeaderValueConverter {
 
     /**
      * Represents the results from the parsing operation. <p>See
-     * {@link HeaderValueConverter#parse(byte[], org.smurn.fitzer.ErrorHandler)}
+     * {@link HeaderValueConverter#decode(byte[], org.smurn.fitzer.ErrorHandler)}
      * .</p>
      */
     public static final class ParsingResult {
@@ -143,7 +143,7 @@ interface HeaderValueConverter {
      * ensure that the value is properly formatted. It returns {@code true} if
      * the bytes can be recognized as an encoding of this converter's type even
      * if the encoding is invalid. Precise checking and error reporting is done
-     * by {@link #parse(byte[], org.smurn.fitzer.ErrorHandler)}.
+     * by {@link #decode(byte[], org.smurn.fitzer.ErrorHandler)}.
      * @param bytes Part of the header record containing the value. Must be of
      * length 70.
      * @return {@code true} if the bytes contain a value of the type this
@@ -169,7 +169,7 @@ interface HeaderValueConverter {
      * @throws IllegalArgumentException if {@code bytes} is not of length 70.
      * @throws IOException see {@link ErrorHandler}.
      */
-    ParsingResult parse(byte[] bytes, long offset, ErrorHandler errorHandler)
+    ParsingResult decode(byte[] bytes, long offset, ErrorHandler errorHandler)
             throws IOException;
 
     /**

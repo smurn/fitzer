@@ -45,7 +45,7 @@ public final class NullHeaderValueConverter implements HeaderValueConverter {
     }
 
     @Override
-    public ParsingResult parse(byte[] bytes, long offset,
+    public ParsingResult decode(byte[] bytes, long offset,
             ErrorHandler errorHandler) throws IOException {
 
         if (bytes == null) {

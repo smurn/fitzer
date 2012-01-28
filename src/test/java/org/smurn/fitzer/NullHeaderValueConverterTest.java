@@ -102,13 +102,13 @@ public class NullHeaderValueConverterTest {
     @Test(expected = NullPointerException.class)
     public void parse_NullNull() throws IOException {
         NullHeaderValueConverter target = new NullHeaderValueConverter();
-        target.parse(null, 1000, null);
+        target.decode(null, 1000, null);
     }
 
     @Test(expected = NullPointerException.class)
     public void parse_Null() throws IOException {
         NullHeaderValueConverter target = new NullHeaderValueConverter();
-        target.parse(null, 1000, THROW_ALWAYS);
+        target.decode(null, 1000, THROW_ALWAYS);
     }
 
     @Test
@@ -116,7 +116,7 @@ public class NullHeaderValueConverterTest {
         NullHeaderValueConverter target = new NullHeaderValueConverter();
 
         HeaderValueConverter.ParsingResult actual =
-                target.parse(toByte(repeat(" ", 70)), 0, THROW_ALWAYS);
+                target.decode(toByte(repeat(" ", 70)), 0, THROW_ALWAYS);
 
         HeaderValueConverter.ParsingResult expected =
                 new HeaderValueConverter.ParsingResult(true, 70, null);
@@ -129,7 +129,7 @@ public class NullHeaderValueConverterTest {
         NullHeaderValueConverter target = new NullHeaderValueConverter();
 
         HeaderValueConverter.ParsingResult actual =
-                target.parse(toByte(repeat(" ", 49) + "/" + repeat(" ", 20)),
+                target.decode(toByte(repeat(" ", 49) + "/" + repeat(" ", 20)),
                 0, THROW_ALWAYS);
 
         HeaderValueConverter.ParsingResult expected =
@@ -143,7 +143,7 @@ public class NullHeaderValueConverterTest {
         NullHeaderValueConverter target = new NullHeaderValueConverter();
 
         HeaderValueConverter.ParsingResult actual =
-                target.parse(toByte("/" + repeat(" ", 69)),
+                target.decode(toByte("/" + repeat(" ", 69)),
                 0, THROW_ALWAYS);
 
         HeaderValueConverter.ParsingResult expected =
@@ -159,7 +159,7 @@ public class NullHeaderValueConverterTest {
         ErrorHandler handler = mock(ErrorHandler.class);
 
         HeaderValueConverter.ParsingResult actual =
-                target.parse(toByte(repeat(" ", 49) + "\t" + repeat(" ", 20)),
+                target.decode(toByte(repeat(" ", 49) + "\t" + repeat(" ", 20)),
                 1000, handler);
 
         HeaderValueConverter.ParsingResult expected =
