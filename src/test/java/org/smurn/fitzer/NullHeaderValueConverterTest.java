@@ -65,13 +65,6 @@ public class NullHeaderValueConverterTest {
     }
 
     @Test
-    public void compatibleEncodingCheck_Tab() {
-        NullHeaderValueConverter target = new NullHeaderValueConverter();
-        assertTrue(target.compatibleEncodingCheck(
-                toByte(repeat(" ", 49) + "\t" + repeat(" ", 20))));
-    }
-
-    @Test
     public void compatibleEncodingCheck_DoubleQuotationMark() {
         NullHeaderValueConverter target = new NullHeaderValueConverter();
         assertFalse(target.compatibleEncodingCheck(
@@ -150,25 +143,5 @@ public class NullHeaderValueConverterTest {
                 new HeaderValueConverter.ParsingResult(true, 0, null);
 
         assertEquals(expected, actual);
-    }
-
-    @Test
-    public void parse_Tab() throws IOException {
-        NullHeaderValueConverter target = new NullHeaderValueConverter();
-
-        ErrorHandler handler = mock(ErrorHandler.class);
-
-        HeaderValueConverter.ParsingResult actual =
-                target.decode(toByte(repeat(" ", 49) + "\t" + repeat(" ", 20)),
-                1000, handler);
-
-        HeaderValueConverter.ParsingResult expected =
-                new HeaderValueConverter.ParsingResult(true, 70, null);
-
-        assertEquals(expected, actual);
-
-        verify(handler).error(
-                new FitsFormatException(
-                1049, "NullHeaderValueNonSpaceChars", (byte) '\t'));
     }
 }

@@ -37,7 +37,7 @@ final class NullHeaderValueConverter implements HeaderValueConverter {
         }
 
         for (int i = 0; i < bytes.length && bytes[i] != '/'; i++) {
-            if (bytes[i] != ' ' && bytes[i] != '\t') {
+            if (bytes[i] != ' ') {
                 return false;
             }
         }
@@ -62,15 +62,9 @@ final class NullHeaderValueConverter implements HeaderValueConverter {
                 i < bytes.length && bytes[i] != '/';
                 i++) {
 
-            if (bytes[i] != ' ' && bytes[i] != '\t') {
+            if (bytes[i] != ' ') {
                 throw new IllegalArgumentException(
                         "Encoded type is not compatible with this converter.");
-            }
-            if (bytes[i] == '\t') {
-                FitsFormatException ex = new FitsFormatException(
-                        offset + i,
-                        "NullHeaderValueNonSpaceChars", bytes[i]);
-                errorHandler.error(ex);
             }
         }
 
