@@ -47,7 +47,7 @@ public final class NullHeaderValueConverter implements HeaderValueConverter {
     @Override
     public ParsingResult parse(byte[] bytes, long offset,
             ErrorHandler errorHandler) throws IOException {
-        
+
         if (bytes == null) {
             throw new NullPointerException("bytes must not be null.");
         }
@@ -78,7 +78,9 @@ public final class NullHeaderValueConverter implements HeaderValueConverter {
     }
 
     @Override
-    public byte[] encode(Object value, boolean fixedFormat) {
+    public byte[] encode(Object value, boolean fixedFormat,
+            ErrorHandler errorHandler) throws IOException {
+
         if (value != null) {
             throw new IllegalArgumentException(
                     "Can only encode the null value.");
