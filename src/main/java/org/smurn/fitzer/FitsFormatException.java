@@ -26,11 +26,9 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 /**
  * Signals that the data read is not in the valid FITS format.
  */
-public class FitsFormatException extends IOException {
+public class FitsFormatException extends FitsException {
 
     private final long offset;
-    private final String messageKey;
-    private final Object[] messageParameters;
 
     /**
      * Creates an instance.
@@ -50,20 +48,11 @@ public class FitsFormatException extends IOException {
      */
     public FitsFormatException(long offset, String messageKey,
             Object... messageParameters) {
+        super(messageKey, messageParameters);
         if (offset < 0) {
             throw new IllegalArgumentException("offset must not be negative.");
         }
-        if (messageKey == null) {
-            throw new NullPointerException("messageKey must not be null.");
-        }
         this.offset = offset;
-        this.messageKey = messageKey;
-        this.messageParameters = messageParameters;
-
-        ResourceBundle messages = ResourceBundle.getBundle(
-                "org.smurn.fitzer.messages", Locale.ROOT);
-        Formatter formatter = new Formatter(Locale.ROOT);
-        formatter.format(messages.getString(messageKey), messageParameters);
     }
 
     /**
@@ -80,31 +69,14 @@ public class FitsFormatException extends IOException {
      * @param locale Locale in which to return the message.
      * @return Message in the given locale.
      */
+    @Override
     public String getLocalizedMessage(Locale locale) {
         ResourceBundle messages = ResourceBundle.getBundle(
                 "org.smurn.fitzer.messages", locale);
         Formatter formatter = new Formatter(locale);
         formatter.format(messages.getString("FitsFormatException"), offset);
-        formatter.format(messages.getString(messageKey), messageParameters);
-        return formatter.toString();
-    }
 
-    /**
-     * Gets the message describing the error in {@code Locale.ENGLISH}.
-     * @return Error message in English.
-     */
-    @Override
-    public String getMessage() {
-        return getLocalizedMessage(Locale.ENGLISH);
-    }
-
-    /**
-     * Gets the message describing the error in the current locale.
-     * @return Error message in the current locale.
-     */
-    @Override
-    public String getLocalizedMessage() {
-        return getLocalizedMessage(Locale.getDefault());
+        return formatter.toString() + super.getLocalizedMessage(locale);
     }
 
     @Override
@@ -119,17 +91,15 @@ public class FitsFormatException extends IOException {
             return false;
         }
         FitsFormatException rhs = (FitsFormatException) obj;
-        return new EqualsBuilder().append(offset, rhs.offset).
-                append(messageKey, rhs.messageKey).
-                append(messageParameters, rhs.messageParameters).
+        return new EqualsBuilder().appendSuper(super.equals(obj)).
+                append(offset, rhs.offset).
                 isEquals();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(offset).
-                append(messageKey).
-                append(messageParameters).
+        return new HashCodeBuilder().appendSuper(super.hashCode()).
+                append(offset).
                 toHashCode();
     }
 }
