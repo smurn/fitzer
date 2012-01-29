@@ -32,17 +32,17 @@ public final class TestUtils {
     public static final ErrorHandler THROW_ALWAYS = new ErrorHandler() {
         
         @Override
-        public void fatal(FitsFormatException exception) throws IOException {
+        public void fatal(FitsException exception) throws IOException {
             throw exception;
         }
         
         @Override
-        public void error(FitsFormatException exception) throws IOException {
+        public void error(FitsException exception) throws IOException {
             throw exception;
         }
         
         @Override
-        public void warning(FitsFormatException exception) throws IOException {
+        public void warning(FitsException exception) throws IOException {
             throw exception;
         }
     };

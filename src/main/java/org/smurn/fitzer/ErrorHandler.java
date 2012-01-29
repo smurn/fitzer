@@ -34,7 +34,7 @@ public interface ErrorHandler {
      * @throws IOException exception of the applications choice.
      * @throws NullPointerException if {@code exception} is {@code null}.
      */
-    void fatal(FitsFormatException exception) throws IOException;
+    void fatal(FitsException exception) throws IOException;
 
     /**
      * Called if a recoverable error occurred. <p>If the application throws an
@@ -45,7 +45,7 @@ public interface ErrorHandler {
      * @throws IOException exception of the applications choice.
      * @throws NullPointerException if {@code exception} is {@code null}.
      */
-    void error(FitsFormatException exception) throws IOException;
+    void error(FitsException exception) throws IOException;
 
     /**
      * Called if a non-critical irregularity occurred. <p>If the application
@@ -56,5 +56,5 @@ public interface ErrorHandler {
      * @throws IOException exception of the applications choice.
      * @throws NullPointerException if {@code exception} is {@code null}.
      */
-    void warning(FitsFormatException exception) throws IOException;
+    void warning(FitsException exception) throws IOException;
 }
