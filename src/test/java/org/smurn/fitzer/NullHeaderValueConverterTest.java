@@ -19,12 +19,16 @@ import java.io.IOException;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.smurn.fitzer.TestUtils.*;
-import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link NullHeaderValueConverter}.
  */
-public class NullHeaderValueConverterTest {
+public class NullHeaderValueConverterTest extends HeaderValueConverterTest {
+
+    @Override
+    HeaderValueConverter createTarget() {
+        return new NullHeaderValueConverter();
+    }
 
     @Test
     public void compatibleCheck_Null() {
@@ -36,12 +40,6 @@ public class NullHeaderValueConverterTest {
     public void compatibleCheck_Object() {
         NullHeaderValueConverter target = new NullHeaderValueConverter();
         assertFalse(target.compatibleTypeCheck(new Object()));
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void compatibleEncodingCheck_Null() {
-        NullHeaderValueConverter target = new NullHeaderValueConverter();
-        target.compatibleEncodingCheck(null);
     }
 
     @Test
@@ -90,18 +88,6 @@ public class NullHeaderValueConverterTest {
         NullHeaderValueConverter target = new NullHeaderValueConverter();
         assertFalse(target.compatibleEncodingCheck(
                 toByte(repeat(" ", 49) + "(" + repeat(" ", 20))));
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void parse_NullNull() throws IOException {
-        NullHeaderValueConverter target = new NullHeaderValueConverter();
-        target.decode(null, 1000, null);
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void parse_Null() throws IOException {
-        NullHeaderValueConverter target = new NullHeaderValueConverter();
-        target.decode(null, 1000, THROW_ALWAYS);
     }
 
     @Test

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 stefan.
+ * Copyright 2012 Stefan C. Mueller.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,56 +15,62 @@
  */
 package org.smurn.fitzer;
 
-import java.math.BigDecimal;
-import nl.jqno.equalsverifier.EqualsVerifier;
+import java.io.IOException;
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.smurn.fitzer.TestUtils.*;
 
 /**
- * Unit tests for {@link HeaderValueConverter}
+ * Unit tests for {@link HeaderValueConverter} implementations.
  */
-public class HeaderValueConverterTest {
+public abstract class HeaderValueConverterTest {
 
-    @Test(expected = IllegalArgumentException.class)
-    public void ParsingResult_ctr_Negative() {
-        new HeaderValueConverter.ParsingResult(true, -1, null);
+    abstract HeaderValueConverter createTarget();
+
+    @Test(expected = NullPointerException.class)
+    public void compatibleEncodingCheck_Null() {
+        HeaderValueConverter target = createTarget();
+        target.compatibleEncodingCheck(null);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void ParsingResult_ctr_Object() {
-        new HeaderValueConverter.ParsingResult(true, -1, new Object());
+    public void compatibleEncodingCheck_Length69() {
+        HeaderValueConverter target = createTarget();
+        target.compatibleEncodingCheck(toByte(repeat(" ", 69)));
     }
 
-    @Test
-    public void ParsingResult_ctr_String() {
-        HeaderValueConverter.ParsingResult target =
-                new HeaderValueConverter.ParsingResult(true, 10, "abc");
-
-        assertEquals("abc", target.getValue());
+    @Test(expected = IllegalArgumentException.class)
+    public void compatibleEncodingCheck_Length71() {
+        HeaderValueConverter target = createTarget();
+        target.compatibleEncodingCheck(toByte(repeat(" ", 71)));
     }
 
-    @Test
-    public void ParsingResult_ctr_BigDecimal() {
-        HeaderValueConverter.ParsingResult target =
-                new HeaderValueConverter.ParsingResult(true, 10,
-                new BigDecimal(5));
-
-        assertEquals(new BigDecimal(5), target.getValue());
+    @Test(expected = NullPointerException.class)
+    public void decode_NullNull() throws IOException {
+        HeaderValueConverter target = createTarget();;
+        target.decode(null, 1000, null);
     }
 
-    @Test
-    public void ParsingResult_ctr_Complex() {
-        HeaderValueConverter.ParsingResult target =
-                new HeaderValueConverter.ParsingResult(true, 10,
-                new Complex(BigDecimal.ZERO, BigDecimal.ZERO));
-
-        assertEquals(new Complex(BigDecimal.ZERO, BigDecimal.ZERO),
-                target.getValue());
+    @Test(expected = NullPointerException.class)
+    public void decode_Null() throws IOException {
+        HeaderValueConverter target = createTarget();
+        target.decode(null, 1000, THROW_ALWAYS);
     }
 
-    @Test
-    public void equalsContract() {
-        EqualsVerifier.forClass(
-                HeaderValueConverter.ParsingResult.class).verify();
+    @Test(expected = IllegalArgumentException.class)
+    public void decode_Length69() throws IOException {
+        HeaderValueConverter target = createTarget();
+        target.decode(toByte(repeat(" ", 69)), 1000, THROW_ALWAYS);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void decode_Length71() throws IOException {
+        HeaderValueConverter target = createTarget();
+        target.decode(toByte(repeat(" ", 71)), 1000, THROW_ALWAYS);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void encode_Null() throws IOException {
+        HeaderValueConverter target = createTarget();
+        target.decode(null, 1000, null);
     }
 }
