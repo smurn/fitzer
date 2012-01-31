@@ -16,7 +16,6 @@
 package org.smurn.fitzer;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.*;
@@ -25,12 +24,12 @@ import java.nio.charset.*;
  * Header value converter for {@code String} values.
  */
 final class StringHeaderValueConverter implements HeaderValueConverter {
-    
+
     @Override
     public boolean compatibleTypeCheck(Object value) {
         return value instanceof String;
     }
-    
+
     @Override
     public boolean compatibleEncodingCheck(byte[] bytes) {
         if (bytes == null) {
@@ -39,7 +38,7 @@ final class StringHeaderValueConverter implements HeaderValueConverter {
         if (bytes.length != 70) {
             throw new IllegalArgumentException("bytes must be of length 70.");
         }
-        
+
         for (int i = 0; i < bytes.length && bytes[i] != '/'; i++) {
             if (bytes[i] == ' ') {
                 continue; // ignore leading spaces
@@ -50,11 +49,11 @@ final class StringHeaderValueConverter implements HeaderValueConverter {
         }
         return false;
     }
-    
+
     @Override
     public ParsingResult decode(byte[] bytes, long offset,
             ErrorHandler errorHandler) throws IOException {
-        
+
         if (bytes == null) {
             throw new NullPointerException("bytes must not be null.");
         }
@@ -64,7 +63,7 @@ final class StringHeaderValueConverter implements HeaderValueConverter {
         if (bytes.length != 70) {
             throw new IllegalArgumentException("bytes must be of length 70.");
         }
-        
+
         int start = 0;
         while (start < bytes.length && bytes[start] == ' ') {
             start++;
@@ -74,7 +73,7 @@ final class StringHeaderValueConverter implements HeaderValueConverter {
             throw new IllegalArgumentException(
                     "Encoded type is not compatible with this converter.");
         }
-               
+
         int pos = start + 1;
         boolean inside = true;
         StringBuilder str = new StringBuilder();
@@ -98,7 +97,7 @@ final class StringHeaderValueConverter implements HeaderValueConverter {
             }
             pos++;
         }
-        
+
         if (inside) {
             FitsFormatException ex = new FitsFormatException(
                     offset + bytes.length - 1,
@@ -106,7 +105,7 @@ final class StringHeaderValueConverter implements HeaderValueConverter {
             errorHandler.fatal(ex);
             throw ex;
         }
-        
+
         return new ParsingResult(start == 0, pos, str.toString());
     }
 
@@ -119,7 +118,7 @@ final class StringHeaderValueConverter implements HeaderValueConverter {
      */
     private void checkCharacter(byte character, long offset,
             ErrorHandler errorHandler) throws IOException {
-        
+
         if (character < 0) {
             int code = ((int) character) & 0x0000FF;
             FitsFormatException ex = new FitsFormatException(
@@ -127,7 +126,7 @@ final class StringHeaderValueConverter implements HeaderValueConverter {
             errorHandler.fatal(ex);
             throw ex;
         }
-        
+
         if (character < 32 || character > 126) {
             FitsFormatException ex = new FitsFormatException(
                     offset, "StringHeaderValueConverter_DecodeLowBit",
@@ -135,7 +134,7 @@ final class StringHeaderValueConverter implements HeaderValueConverter {
             errorHandler.error(ex);
         }
     }
-    
+
     @Override
     public byte[] encode(Object value, boolean fixedFormat,
             ErrorHandler errorHandler) throws IOException {
@@ -143,7 +142,7 @@ final class StringHeaderValueConverter implements HeaderValueConverter {
             throw new IllegalArgumentException("Value is not a string.");
         }
         String string = (String) value;
-        
+
         CharsetEncoder encoder = Charset.forName("US-ASCII").newEncoder();
         encoder.onMalformedInput(CodingErrorAction.REPORT);
         encoder.onUnmappableCharacter(CodingErrorAction.REPORT);
@@ -160,7 +159,7 @@ final class StringHeaderValueConverter implements HeaderValueConverter {
             errorHandler.fatal(e);
             throw e;
         }
-        
+
         if (encodedBody.remaining() > 68) {
             FitsDataException ex = new FitsDataException(
                     "StringHeaderValueConverter_EncodeLength",
