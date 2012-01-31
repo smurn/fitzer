@@ -17,17 +17,20 @@ package org.smurn.fitzer;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.*;
 
 /**
  * Header value converter for {@code String} values.
  */
-public class StringHeaderValueConverter implements HeaderValueConverter {
-
+final class StringHeaderValueConverter implements HeaderValueConverter {
+    
     @Override
     public boolean compatibleTypeCheck(Object value) {
         return value instanceof String;
     }
-
+    
     @Override
     public boolean compatibleEncodingCheck(byte[] bytes) {
         if (bytes == null) {
@@ -36,22 +39,22 @@ public class StringHeaderValueConverter implements HeaderValueConverter {
         if (bytes.length != 70) {
             throw new IllegalArgumentException("bytes must be of length 70.");
         }
-
+        
         for (int i = 0; i < bytes.length && bytes[i] != '/'; i++) {
-            if (bytes[i] == ' ' || bytes[i] == '\t') {
+            if (bytes[i] == ' ') {
                 continue; // ignore leading spaces
             }
-            if (bytes[i] == '\'' || bytes[i] == '\"') {
+            if (bytes[i] == '\'') {
                 return true;
             }
         }
         return false;
     }
-
+    
     @Override
     public ParsingResult decode(byte[] bytes, long offset,
             ErrorHandler errorHandler) throws IOException {
-
+        
         if (bytes == null) {
             throw new NullPointerException("bytes must not be null.");
         }
@@ -61,53 +64,31 @@ public class StringHeaderValueConverter implements HeaderValueConverter {
         if (bytes.length != 70) {
             throw new IllegalArgumentException("bytes must be of length 70.");
         }
-
-        int foundNonSpaces = -1;
+        
         int start = 0;
-        while (start < bytes.length
-                && (bytes[start] == ' ' || bytes[start] == '\t')) {
-            if (foundNonSpaces < 0 && bytes[start] == '\t') {
-                foundNonSpaces = start;
-            }
+        while (start < bytes.length && bytes[start] == ' ') {
             start++;
         }
 
-        if (foundNonSpaces >= 0) {
-            FitsFormatException ex = new FitsFormatException(
-                    offset + foundNonSpaces,
-                    "HeaderValueNonSpaceChars", (int) '\t');
-            errorHandler.warning(ex);
-        }
-
-        if (start >= bytes.length
-                || (bytes[start] != '\'' && bytes[start] != '\"')) {
+        if (start >= bytes.length || bytes[start] != '\'') {
             throw new IllegalArgumentException(
                     "Encoded type is not compatible with this converter.");
         }
-
-        byte quote = bytes[start];  // either ' or "
-
-        if (quote == '"') {
-            FitsFormatException ex = new FitsFormatException(
-                    offset + start,
-                    "StringHeaderValueDoubleQuotes");
-            errorHandler.error(ex);
-        }
-
+               
         int pos = start + 1;
         boolean inside = true;
         StringBuilder str = new StringBuilder();
         while (pos < bytes.length) {
             byte c = bytes[pos];
             if (inside) {
-                if (c == quote) {
+                if (c == '\'') {
                     inside = false;
                 } else {
                     checkCharacter(c, offset + pos, errorHandler);
                     str.append((char) c);
                 }
             } else {
-                if (c == quote) {
+                if (c == '\'') {
                     inside = true;
                     checkCharacter(c, offset + pos, errorHandler);
                     str.append((char) c);
@@ -117,15 +98,15 @@ public class StringHeaderValueConverter implements HeaderValueConverter {
             }
             pos++;
         }
-
+        
         if (inside) {
             FitsFormatException ex = new FitsFormatException(
                     offset + bytes.length - 1,
-                    "StringHeaderValueNotClosed");
+                    "StringHeaderValueConverter_DecodeOpen");
             errorHandler.fatal(ex);
             throw ex;
         }
-
+        
         return new ParsingResult(start == 0, pos, str.toString());
     }
 
@@ -138,22 +119,23 @@ public class StringHeaderValueConverter implements HeaderValueConverter {
      */
     private void checkCharacter(byte character, long offset,
             ErrorHandler errorHandler) throws IOException {
-
+        
         if (character < 0) {
             int code = ((int) character) & 0x0000FF;
             FitsFormatException ex = new FitsFormatException(
-                    offset, "StringHeaderValueHighBit", code);
+                    offset, "StringHeaderValueConverter_DecodeHighBit", code);
             errorHandler.fatal(ex);
             throw ex;
         }
-
+        
         if (character < 32 || character > 126) {
             FitsFormatException ex = new FitsFormatException(
-                    offset, "StringHeaderValueInvalidChar", (int) character);
+                    offset, "StringHeaderValueConverter_DecodeLowBit",
+                    (int) character);
             errorHandler.error(ex);
         }
     }
-
+    
     @Override
     public byte[] encode(Object value, boolean fixedFormat,
             ErrorHandler errorHandler) throws IOException {
@@ -161,10 +143,48 @@ public class StringHeaderValueConverter implements HeaderValueConverter {
             throw new IllegalArgumentException("Value is not a string.");
         }
         String string = (String) value;
+        
+        CharsetEncoder encoder = Charset.forName("US-ASCII").newEncoder();
+        encoder.onMalformedInput(CodingErrorAction.REPORT);
+        encoder.onUnmappableCharacter(CodingErrorAction.REPORT);
+        CharBuffer buffer = CharBuffer.allocate(string.length());
+        buffer.clear();
+        buffer.put(string);
+        buffer.flip();
+        ByteBuffer encodedBody;
         try {
-            return string.getBytes("US-ASCII");
-        } catch (UnsupportedEncodingException ex) {
-            throw new RuntimeException(ex);
+            encodedBody = encoder.encode(buffer);
+        } catch (CharacterCodingException ex) {
+            FitsDataException e = new FitsDataException(
+                    "StringHeaderValueConverter_EncodeHighBit", string);
+            errorHandler.fatal(e);
+            throw e;
         }
+        
+        if (encodedBody.remaining() > 68) {
+            FitsDataException ex = new FitsDataException(
+                    "StringHeaderValueConverter_EncodeLength",
+                    string, encodedBody.remaining());
+            errorHandler.fatal(ex);
+            throw ex;
+        }
+        byte[] v = new byte[70];
+        int pos = 0;
+        v[pos++] = '\'';
+        while (encodedBody.hasRemaining()) {
+            byte b = encodedBody.get();
+            if (b < 32 || b > 126) {
+                FitsDataException ex = new FitsDataException(
+                        "StringHeaderValueConverter_EncodeLowBit",
+                        string, (int) b);
+                errorHandler.error(ex);
+            }
+            v[pos++] = b;
+        }
+        v[pos++] = '\'';
+        while (pos < v.length) {
+            v[pos++] = ' ';
+        }
+        return v;
     }
 }

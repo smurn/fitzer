@@ -1,5 +1,9 @@
 /*
+ <<<<<<< Updated upstream
  * Copyright 2012 stefan.
+ =======
+ * Copyright 2012 Stefan C. Mueller.
+ >>>>>>> Stashed changes
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +28,12 @@ import static org.mockito.Mockito.*;
 /**
  * Unit tests for {@link StringHeaderValueConverter}.
  */
-public class StringHeaderValueConverterTest {
+public class StringHeaderValueConverterTest extends HeaderValueConverterTest {
+
+    @Override
+    HeaderValueConverter createTarget() {
+        return new StringHeaderValueConverter();
+    }
 
     @Test
     public void compatibleCheck_Null() {
@@ -39,15 +48,9 @@ public class StringHeaderValueConverterTest {
     }
 
     @Test
-    public void compatibleCheck_String() {
+    public void compatibleTypeCheck_String() {
         StringHeaderValueConverter target = new StringHeaderValueConverter();
         assertTrue(target.compatibleTypeCheck("abc"));
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void compatibleEncodingCheck_Null() {
-        StringHeaderValueConverter target = new StringHeaderValueConverter();
-        target.compatibleEncodingCheck(null);
     }
 
     @Test
@@ -78,43 +81,10 @@ public class StringHeaderValueConverterTest {
     }
 
     @Test
-    public void compatibleEncodingCheck_lonelyDoubleQuote() {
-        StringHeaderValueConverter target = new StringHeaderValueConverter();
-        assertTrue(target.compatibleEncodingCheck(
-                toByte(repeat(" ", 40) + "\"" + repeat(" ", 29))));
-    }
-
-    @Test
     public void compatibleEncodingCheck_SingleQuoteString() {
         StringHeaderValueConverter target = new StringHeaderValueConverter();
         assertTrue(target.compatibleEncodingCheck(
                 toByte(repeat(" ", 40) + "'ab'" + repeat(" ", 26))));
-    }
-
-    @Test
-    public void compatibleEncodingCheck_DoubleQuoteString() {
-        StringHeaderValueConverter target = new StringHeaderValueConverter();
-        assertTrue(target.compatibleEncodingCheck(
-                toByte(repeat(" ", 40) + "\"ab\"" + repeat(" ", 26))));
-    }
-
-    @Test
-    public void compatibleEncodingCheck_Tabs() {
-        StringHeaderValueConverter target = new StringHeaderValueConverter();
-        assertTrue(target.compatibleEncodingCheck(
-                toByte(repeat("\t", 40) + "'ab'" + repeat(" ", 26))));
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void parse_NullNull() throws IOException {
-        StringHeaderValueConverter target = new StringHeaderValueConverter();
-        target.decode(null, 1000, null);
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void parse_Null() throws IOException {
-        StringHeaderValueConverter target = new StringHeaderValueConverter();
-        target.decode(null, 1000, THROW_ALWAYS);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -124,55 +94,30 @@ public class StringHeaderValueConverterTest {
     }
 
     @Test
-    public void parse_String() throws IOException {
+    public void decode_fixed() throws IOException {
         StringHeaderValueConverter target = new StringHeaderValueConverter();
+        StringHeaderValueConverter.ParsingResult actual =
+                target.decode(toBytePad("'ab'", 70), 1000, THROW_ALWAYS);
 
-        StringHeaderValueConverter.ParsingResult actual = target.decode(
-                toByte("'abcD'" + repeat(" ", 64)),
-                1000, THROW_ALWAYS);
+        StringHeaderValueConverter.ParsingResult expected =
+                new HeaderValueConverter.ParsingResult(true, 4, "ab");
 
-        StringHeaderValueConverter.ParsingResult expected = new HeaderValueConverter.ParsingResult(
-                true, 6, "abcD");
+        assertEquals(expected, actual);
+    }
+
+    public void decode_free() throws IOException {
+        StringHeaderValueConverter target = new StringHeaderValueConverter();
+        StringHeaderValueConverter.ParsingResult actual =
+                target.decode(toBytePad(" 'ab'", 70), 1000, THROW_ALWAYS);
+
+        StringHeaderValueConverter.ParsingResult expected =
+                new HeaderValueConverter.ParsingResult(false, 5, "ab");
 
         assertEquals(expected, actual);
     }
 
     @Test
-    public void parse_Free() throws IOException {
-        StringHeaderValueConverter target = new StringHeaderValueConverter();
-
-        StringHeaderValueConverter.ParsingResult actual = target.decode(
-                toByte("    'abcD'" + repeat(" ", 60)),
-                1000, THROW_ALWAYS);
-
-        StringHeaderValueConverter.ParsingResult expected = new HeaderValueConverter.ParsingResult(
-                false, 10, "abcD");
-
-        assertEquals(expected, actual);
-    }
-
-    @Test
-    public void parse_Tabs() throws IOException {
-        StringHeaderValueConverter target = new StringHeaderValueConverter();
-
-        ErrorHandler handler = mock(ErrorHandler.class);
-
-        StringHeaderValueConverter.ParsingResult actual = target.decode(
-                toByte(" \t  'abcD'" + repeat(" ", 60)),
-                1000, handler);
-
-        StringHeaderValueConverter.ParsingResult expected = new HeaderValueConverter.ParsingResult(
-                false, 10, "abcD");
-
-        assertEquals(expected, actual);
-
-        verify(handler).warning(
-                new FitsFormatException(
-                1001, "HeaderValueNonSpaceChars", (int) '\t'));
-    }
-
-    @Test
-    public void parse_EmptyString() throws IOException {
+    public void encode_EmptyString() throws IOException {
         StringHeaderValueConverter target = new StringHeaderValueConverter();
 
         StringHeaderValueConverter.ParsingResult actual = target.decode(
@@ -181,159 +126,165 @@ public class StringHeaderValueConverterTest {
 
         StringHeaderValueConverter.ParsingResult expected = new HeaderValueConverter.ParsingResult(
                 true, 2, "");
+        assertEquals(expected, actual);
+    }
+
+    public void decode_escapeMiddle() throws IOException {
+        StringHeaderValueConverter target = new StringHeaderValueConverter();
+        StringHeaderValueConverter.ParsingResult actual =
+                target.decode(toBytePad("'a''b'", 70), 1000, THROW_ALWAYS);
+
+        StringHeaderValueConverter.ParsingResult expected =
+                new HeaderValueConverter.ParsingResult(true, 6, "a'b");
 
         assertEquals(expected, actual);
     }
 
     @Test
-    public void parse_StringEscaped() throws IOException {
+    public void decode_escapeDouble() throws IOException {
         StringHeaderValueConverter target = new StringHeaderValueConverter();
+        StringHeaderValueConverter.ParsingResult actual =
+                target.decode(toBytePad("'a''''b'", 70), 1000, THROW_ALWAYS);
 
-        StringHeaderValueConverter.ParsingResult actual = target.decode(
-                toByte("'a''b'" + repeat(" ", 64)),
-                1000, THROW_ALWAYS);
-
-        StringHeaderValueConverter.ParsingResult expected = new HeaderValueConverter.ParsingResult(
-                true, 6, "a'b");
+        StringHeaderValueConverter.ParsingResult expected =
+                new HeaderValueConverter.ParsingResult(true, 8, "a''b");
 
         assertEquals(expected, actual);
     }
 
-    @Test
-    public void parse_StringEscapedTwice() throws IOException {
+    public void decode_escapeStart() throws IOException {
         StringHeaderValueConverter target = new StringHeaderValueConverter();
+        StringHeaderValueConverter.ParsingResult actual =
+                target.decode(toBytePad("'''ab'", 70), 1000, THROW_ALWAYS);
 
-        StringHeaderValueConverter.ParsingResult actual = target.decode(
-                toByte("'a''''b'" + repeat(" ", 62)),
-                1000, THROW_ALWAYS);
-
-        StringHeaderValueConverter.ParsingResult expected = new HeaderValueConverter.ParsingResult(
-                true, 8, "a''b");
-
+        StringHeaderValueConverter.ParsingResult expected =
+                new HeaderValueConverter.ParsingResult(true, 6, "'ab");
         assertEquals(expected, actual);
     }
 
-    @Test
-    public void parse_StringEscapedFirst() throws IOException {
+    public void decode_escapeEnd() throws IOException {
         StringHeaderValueConverter target = new StringHeaderValueConverter();
+        StringHeaderValueConverter.ParsingResult actual =
+                target.decode(toBytePad("'ab'''", 70), 1000, THROW_ALWAYS);
 
-        StringHeaderValueConverter.ParsingResult actual = target.decode(
-                toByte("'''b'" + repeat(" ", 65)),
-                1000, THROW_ALWAYS);
-
-        StringHeaderValueConverter.ParsingResult expected = new HeaderValueConverter.ParsingResult(
-                true, 5, "'b");
-
+        StringHeaderValueConverter.ParsingResult expected =
+                new HeaderValueConverter.ParsingResult(true, 6, "ab'");
         assertEquals(expected, actual);
     }
 
-    @Test
-    public void parse_StringEscapedLast() throws IOException {
-        StringHeaderValueConverter target = new StringHeaderValueConverter();
-
-        StringHeaderValueConverter.ParsingResult actual = target.decode(
-                toByte("'b'''" + repeat(" ", 65)),
-                1000, THROW_ALWAYS);
-
-        StringHeaderValueConverter.ParsingResult expected = new HeaderValueConverter.ParsingResult(
-                true, 5, "b'");
-
-        assertEquals(expected, actual);
-    }
-
-    @Test
-    public void parse_InvalidChar() throws IOException {
-        StringHeaderValueConverter target = new StringHeaderValueConverter();
-
+    public void decode_highbit() throws IOException {
         ErrorHandler handler = mock(ErrorHandler.class);
 
-        StringHeaderValueConverter.ParsingResult actual = target.decode(
-                toByte("'\037'" + repeat(" ", 67)),
-                1000, handler);
+        FitsFormatException expected = new FitsFormatException(1002,
+                "StringHeaderValueConverter_HighBit", 128);
 
-        StringHeaderValueConverter.ParsingResult expected = new HeaderValueConverter.ParsingResult(
-                true, 3, "\037");
-
-        assertEquals(expected, actual);
-
-        verify(handler).error(new FitsFormatException(1001,
-                "StringHeaderValueInvalidChar", 037));
-    }
-
-    @Test
-    public void parse_highBit() throws IOException {
         StringHeaderValueConverter target = new StringHeaderValueConverter();
-
-        ErrorHandler handler = mock(ErrorHandler.class);
-
-        byte[] bytes = toByte("'x'" + repeat(" ", 67));
-        bytes[1] = (byte) 128;
-
-        FitsFormatException expected = new FitsFormatException(1001,
-                "StringHeaderValueHighBit", 128);
-
         try {
-            target.decode(bytes, 1000, handler);
-        } catch (FitsFormatException ex) {
-            assertEquals(expected, ex);
-        } finally {
-            verify(handler).fatal(expected);
+            StringHeaderValueConverter.ParsingResult actual =
+                    target.decode(toBytePad("'a" + (char) 128 + "b'", 70), 1000,
+                    handler);
+        } catch (IOException e) {
+            assertEquals(expected, e);
         }
+
+        verify(handler).fatal(expected);
     }
 
     @Test
-    public void parse_NotClosed() throws IOException {
-        StringHeaderValueConverter target = new StringHeaderValueConverter();
-
+    public void decode_lowbit() throws IOException {
         ErrorHandler handler = mock(ErrorHandler.class);
+
+        StringHeaderValueConverter target = new StringHeaderValueConverter();
+        StringHeaderValueConverter.ParsingResult actual =
+                target.decode(toBytePad("'a" + (char) 127 + "b'", 70), 1000,
+                handler);
+
+        StringHeaderValueConverter.ParsingResult expected =
+                new HeaderValueConverter.ParsingResult(true, 5,
+                "a" + (char) 127 + "b");
+
+        assertEquals(expected, actual);
+
+        verify(handler).error(new FitsFormatException(1002,
+                "StringHeaderValueConverter_DecodeLowBit", 127));
+    }
+
+    @Test
+    public void decode_open() throws IOException {
+        ErrorHandler handler = mock(ErrorHandler.class);
+        StringHeaderValueConverter target = new StringHeaderValueConverter();
 
         FitsFormatException expected = new FitsFormatException(1069,
-                "StringHeaderValueNotClosed");
+                "StringHeaderValueConverter_DecodeOpen");
 
         try {
-            target.decode(toByte("'abc" + repeat(" ", 66)), 1000, handler);
-        } catch (FitsFormatException ex) {
-            assertEquals(expected, ex);
-        } finally {
-            verify(handler).fatal(expected);
+            target.decode(toBytePad("'ab", 70), 1000, handler);
+            fail("Fatal exception not thrown.");
+        } catch (IOException e) {
+            assertEquals(expected, e);
         }
+
+        verify(handler).fatal(expected);
     }
 
     @Test
-    public void parse_doubleQuote() throws IOException {
+    public void encode_fixed() throws IOException {
         StringHeaderValueConverter target = new StringHeaderValueConverter();
-
-        ErrorHandler handler = mock(ErrorHandler.class);
-
-        StringHeaderValueConverter.ParsingResult actual = target.decode(
-                toByte("\"ab\"" + repeat(" ", 66)),
-                1000, handler);
-
-        StringHeaderValueConverter.ParsingResult expected = new HeaderValueConverter.ParsingResult(
-                true, 4, "ab");
-
-        assertEquals(expected, actual);
-
-        verify(handler).error(new FitsFormatException(1000,
-                "StringHeaderValueDoubleQuotes"));
+        byte[] actual = target.encode("abc", true, THROW_ALWAYS);
+        byte[] expected = toBytePad("'abc'", 70);
+        assertArrayEquals(expected, actual);
     }
 
     @Test
-    public void parse_doubleQuoteEscape() throws IOException {
+    public void encode_free() throws IOException {
+        StringHeaderValueConverter target = new StringHeaderValueConverter();
+        byte[] actual = target.encode("abc", false, THROW_ALWAYS);
+        byte[] expected = toBytePad("'abc'", 70);
+        assertArrayEquals(expected, actual);
+    }
+
+    @Test
+    public void encode_length() throws IOException {
+        ErrorHandler handler = mock(ErrorHandler.class);
         StringHeaderValueConverter target = new StringHeaderValueConverter();
 
+        FitsDataException expected = new FitsDataException(
+                "StringHeaderValueConverter_EncodeLength",
+                repeat("x", 69), 69);
+        try {
+            target.encode(repeat("x", 69), false, handler);
+        } catch (FitsDataException ex) {
+            assertEquals(expected, ex);
+        }
+
+        verify(handler).fatal(expected);
+    }
+
+    @Test
+    public void encode_lowbit() throws IOException {
+        StringHeaderValueConverter target = new StringHeaderValueConverter();
         ErrorHandler handler = mock(ErrorHandler.class);
+        String string = "a" + (char) 127 + "c";
+        byte[] actual = target.encode(string, false, handler);
+        byte[] expected = toBytePad("'a" + (char) 127 + "c'", 70);
+        assertArrayEquals(expected, actual);
+        verify(handler).error(new FitsDataException(
+                "StringHeaderValueConverter_EncodeLowBit", string, 127));
+    }
 
-        StringHeaderValueConverter.ParsingResult actual = target.decode(
-                toByte("\"a\"\"b\"" + repeat(" ", 64)),
-                1000, handler);
+    @Test
+    public void encode_highbit() throws IOException {
+        StringHeaderValueConverter target = new StringHeaderValueConverter();
+        ErrorHandler handler = mock(ErrorHandler.class);
+        String string = "a" + (char) 128 + "c";
 
-        StringHeaderValueConverter.ParsingResult expected = new HeaderValueConverter.ParsingResult(
-                true, 6, "a\"b");
-
-        assertEquals(expected, actual);
-
-        verify(handler).error(new FitsFormatException(1000,
-                "StringHeaderValueDoubleQuotes"));
+        FitsDataException expected = new FitsDataException(
+                "StringHeaderValueConverter_EncodeHighBit", string);
+        try {
+            target.encode(string, false, handler);
+        } catch (FitsDataException ex) {
+            assertEquals(expected, ex);
+        }
+        verify(handler).fatal(expected);
     }
 }

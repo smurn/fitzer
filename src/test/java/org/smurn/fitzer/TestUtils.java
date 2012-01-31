@@ -22,7 +22,7 @@ import java.io.UnsupportedEncodingException;
  * Utility methods for unit tests.
  */
 public final class TestUtils {
-    
+
     private TestUtils() {
         // no instances
     }
@@ -30,17 +30,17 @@ public final class TestUtils {
      * Error handler that throws the exception for all levels.
      */
     public static final ErrorHandler THROW_ALWAYS = new ErrorHandler() {
-        
+
         @Override
         public void fatal(FitsException exception) throws IOException {
             throw exception;
         }
-        
+
         @Override
         public void error(FitsException exception) throws IOException {
             throw exception;
         }
-        
+
         @Override
         public void warning(FitsException exception) throws IOException {
             throw exception;
@@ -78,5 +78,9 @@ public final class TestUtils {
         } catch (UnsupportedEncodingException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    public static byte[] toBytePad(String string, int length) {
+        return toByte(string + repeat(" ", length - string.length()));
     }
 }

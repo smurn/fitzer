@@ -53,7 +53,7 @@ public class FitsDataException extends FitsException {
         if (obj.getClass() != getClass()) {
             return false;
         }
-        FitsFormatException rhs = (FitsFormatException) obj;
+        FitsDataException rhs = (FitsDataException) obj;
         return new EqualsBuilder().appendSuper(super.equals(obj)).
                 isEquals();
     }
